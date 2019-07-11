@@ -11,11 +11,11 @@ GOFALGS=
 
 $(shell mkdir -p bin)
 
-build: bin/cluster-etcd-operator
+build: bin/cluster-etcd-operator bin/setup-etcd-environment
 
-bin/cluster-etcd-operator: $(GOFILES) 
+bin/%: $(GOFILES) 
 	@echo Building $@
-	@go build $(GOFLAGS) -ldflags "$(GLDFLAGS)" -o $(ROOT_DIR)/$@ github.com/openshift/cluster-etcd-operator/cmd/cluster-etcd-operator
+	@go build $(GOFLAGS) -ldflags "$(GLDFLAGS)" -o $(ROOT_DIR)/$@ github.com/openshift/cluster-etcd-operator/cmd/$*
 
 test-unit:
 	@go test -v ./...
