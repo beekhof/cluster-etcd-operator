@@ -26,6 +26,7 @@ var (
 	}
 
 	runOpts struct {
+		pivotFromBootstrap bool
 		discoverySRV string
 		ifName       string
 		outputFile   string
@@ -34,6 +35,7 @@ var (
 
 func init() {
 	rootCmd.AddCommand(runCmd)
+	rootCmd.PersistentFlags().BoolVar(&runOpts.pivotFromBootstrap, "pivot", false, "Enable logic the provisions etcd by pivoting from an instance on the bootstrap node.")
 	rootCmd.PersistentFlags().StringVar(&runOpts.discoverySRV, "discovery-srv", "", "DNS domain used to bootstrap initial etcd cluster.")
 	rootCmd.PersistentFlags().StringVar(&runOpts.outputFile, "output-file", "", "file where the envs are written. If empty, prints to Stdout.")
 }
@@ -45,7 +47,16 @@ func runRunCmd(cmd *cobra.Command, args []string) error {
 	// To help debugging, immediately log version
 	glog.Infof("Version: %+v (%s)", version.Version, version.Hash)
 
-	if runOpts.discoverySRV == "" {
+	var discoveryArgs = ""
+	var pivoting = "1"
+	if runOpts.discoverySRV != "" && runOpts.pivotFromBootstrap == false {
+	        return errors.New("--discovery-srv cannot be empty")
+	} else if runOpts.pivotFromBootstrap == false {
+	        discoveryArgs = fmt.Sprintf("--discovery-srv %s", runOpts.discoverySRV)
+	        pivoting = "0"
+	} else {
+	        // For now, much of the dns and ip lookup logic below will break
+		// But in the future we want to allow discoveryArgs to be unset
 		return errors.New("--discovery-srv cannot be empty")
 	}
 
@@ -90,6 +101,8 @@ func runRunCmd(cmd *cobra.Command, args []string) error {
 		"IPV4_ADDRESS":      ip,
 		"DNS_NAME":          dns,
 		"WILDCARD_DNS_NAME": fmt.Sprintf("*.%s", runOpts.discoverySRV),
+		"DISCOVERY_ARGS": discoveryArgs,
+		"PIVOT_FROM_BOOTSTRAP": pivoting,
 	}, out)
 }
 
