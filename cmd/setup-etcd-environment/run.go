@@ -12,7 +12,7 @@ import (
 	"time"
 
 	glog "k8s.io/klog"
-	"github.com/openshift/machine-config-operator/pkg/version"
+	"github.com/openshift/cluster-etcd-operator/pkg/version"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -43,9 +43,10 @@ func init() {
 func runRunCmd(cmd *cobra.Command, args []string) error {
 	flag.Set("logtostderr", "true")
 	flag.Parse()
+	info := version.Get()
 
 	// To help debugging, immediately log version
-	glog.Infof("Version: %+v (%s)", version.Version, version.Hash)
+	glog.Infof("Version: %+v (%s)", info.GitVersion, info.GitCommit)
 
 	var discoveryArgs = ""
 	var pivoting = "1"
